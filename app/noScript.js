@@ -10,6 +10,7 @@ const siteSettings = require('../js/state/siteSettings')
 const siteUtil = require('../js/state/siteUtil')
 const ipcMain = require('electron').ipcMain
 const messages = require('../js/constants/messages')
+const { getIndexHTML } = require('../js/lib/appUrlUtil')
 
 module.exports.resourceName = 'noScript'
 
@@ -34,7 +35,10 @@ function onHeadersReceived (details) {
   }
   // Ignore whitelisted URL schemes and non-applicable resource types
   let parsed = urlParse(details.firstPartyUrl)
-  if (['about:', 'chrome:', 'chrome-extension:'].includes(parsed.protocol) || ['stylesheet', 'script', 'image'].includes(details.resourceType) || parsed.hostname === 'localhost') {
+  if (['about:', 'chrome:', 'chrome-extension:'].includes(parsed.protocol) ||
+      ['stylesheet', 'script', 'image'].includes(details.resourceType) ||
+      parsed.hostname === 'localhost' ||
+      details.firstPartyUrl === getIndexHTML()) {
     return result
   }
 
@@ -77,7 +81,7 @@ function onHeadersReceived (details) {
   }
 
   let csp = details.responseHeaders[cspHeaderName] || []
-  csp.push("script-src 'none'")
+  csp.push('script-src chrome-extension://*')
   result.responseHeaders[cspHeaderName] = csp
   return result
 }
